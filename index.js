@@ -21,6 +21,7 @@ const client = new MongoClient(uri, { useNewUrlParser: true, useUnifiedTopology:
 async function run(){
     try{
         const serviceCollection = client.db('heroChef').collection('services');
+        const reviewCollection = client.db('heroChef').collection('reviews');
 
         app.get('/services', async(req, res) =>{
             let dataLimit = 9999;
@@ -39,6 +40,29 @@ async function run(){
             res.send(details);
 
         })
+        app.post("/addreview", async (req, res) => {
+            const review = req.body;
+            
+            const result = await reviewCollection.insertOne(review);
+            res.send(result);
+        });
+
+        app.get("/reviews", async (req, res) => {
+        let query = {};
+        if (req.query.email) {
+            query = {
+            customarEmail: req.query.email,
+            };
+        } else if (req.query.productId) {
+            query = {
+            productId: req.query.productId,
+            };
+        }
+    
+        const cursor = reviewCollection.find(query).sort({ reviewTime: -1 });
+        const reviews = await cursor.toArray();
+        res.send(reviews);
+        });
     }
     finally{
 
